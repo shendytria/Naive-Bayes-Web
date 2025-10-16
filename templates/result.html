@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Hasil Analisis - Naive Bayes</title>
+    <style>
+        :root {
+            --brand: #111111;
+            --accent: #6B7280;
+            --bg: #ECECEC;
+            --surface: #FFFFFF;
+            --text: #0A0A0A;
+            --radius: 12px;
+        }
+
+        * {
+            box-sizing: border-box
+        }
+
+        html,
+        body {
+            height: 100%
+        }
+
+        body {
+            margin: 0;
+            background: var(--bg);
+            color: var(--text);
+            font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, "Noto Sans", "Helvetica Neue", sans-serif;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 24px;
+        }
+
+        header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+
+        .brand {
+            font-size: 20px;
+            font-weight: 600;
+            letter-spacing: .2px;
+        }
+
+        h2 {
+            font-size: 22px;
+            font-weight: 600;
+            margin: 0 0 12px
+        }
+
+        h3 {
+            font-size: 18px;
+            margin: 16px 0 8px
+        }
+
+        h4 {
+            font-size: 15px;
+            margin: 10px 0 6px
+        }
+
+        .card {
+            background: var(--surface);
+            border-radius: var(--radius);
+            border: 1px solid rgba(0, 0, 0, .05);
+            padding: 16px 24px 24px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05), 0 8px 24px rgba(0, 0, 0, 0.08);
+            transition: box-shadow .3s ease, transform .2s ease;
+        }
+
+        .card:hover {
+            box-shadow: 0 6px 14px rgba(0, 0, 0, 0.07), 0 12px 28px rgba(0, 0, 0, 0.10);
+            transform: translateY(-2px);
+        }
+
+        .stack {
+            display: grid;
+            gap: 16px
+        }
+
+        .grid {
+            display: grid;
+            gap: 16px
+        }
+
+        @media(min-width:900px) {
+            .grid {
+                grid-template-columns: 1fr 1fr
+            }
+        }
+
+        .scroll-table {
+            max-height: 400px;
+            overflow-y: auto;
+            overflow-x: hidden;
+            border-radius: 12px;
+            background: var(--surface);
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05), 0 8px 18px rgba(0, 0, 0, 0.08);
+            transition: box-shadow .3s ease;
+        }
+
+        .scroll-table:hover {
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.07), 0 10px 24px rgba(0, 0, 0, 0.10);
+        }
+
+        .scroll-table table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            border: none;
+        }
+
+        .scroll-table th,
+        .scroll-table td {
+            padding: 10px 14px;
+            font-size: 13px;
+            border: none;
+        }
+
+        .scroll-table th {
+            background: linear-gradient(to bottom, #E2DEF7);
+            font-weight: 600;
+            color: #111;
+            text-align: left;
+            position: sticky;
+            top: 0;
+            z-index: 1;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04);
+        }
+
+        .scroll-table tr {
+            background: #fff;
+            transition: transform .15s ease, box-shadow .15s ease;
+        }
+
+        .scroll-table tr:nth-child(even) {
+            background: #fafafa;
+        }
+
+        .scroll-table tr:hover {
+            transform: scale(1.01);
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.06);
+            z-index: 5;
+        }
+
+        .badge {
+            display: inline-block;
+            background: #000000;
+            color: #f1f1f1;
+            padding: 4px 8px;
+            border-radius: 999px;
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        .score {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            background: #F7F7F7;
+            color: #14532D;
+            border-radius: var(--radius);
+            padding: 16px;
+            font-weight: 700;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            height: 40px;
+            padding: 0 14px;
+            border-radius: 10px;
+            font-weight: 600;
+            font-size: 14px;
+            border: 1px solid transparent;
+            cursor: pointer;
+            transition: background .2s, box-shadow .2s, transform .02s;
+            text-decoration: none;
+        }
+
+        .btn:active {
+            transform: translateY(1px)
+        }
+
+        .btn-primary {
+            background: var(--brand);
+            color: #fff;
+        }
+
+        .btn-primary:hover {
+            box-shadow: 0 6px 18px rgba(0, 0, 0, .22);
+        }
+
+        .btn-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px
+        }
+
+        .img-fluid {
+            max-width: 100%;
+            height: auto;
+            border-radius: 10px;
+            border: 1px solid rgba(0, 0, 0, .08);
+        }
+
+        .footer {
+            margin-top: 24px;
+            font-size: 12px;
+            opacity: .7;
+            text-align: center;
+        }
+
+        /* tombol unduh csv: kotak tipis abu, teks hitam, kecil */
+        .btn-outline {
+            background: transparent;
+            border: 1px solid #D1D5DB;
+            /* abu-abu tipis */
+            color: #0A0A0A;
+            /* hitam */
+            font-weight: 400;
+            /* tidak tebal */
+            height: 32px;
+            /* lebih kecil */
+            padding: 0 10px;
+            border-radius: 8px;
+        }
+
+        .btn-outline:hover {
+            background: #F9FAFB;
+            /* sedikit abu saat hover */
+            box-shadow: none;
+        }
+
+        .h4-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+        }
+
+        .h4-row h4 {
+            margin: 10px 0 6px;
+            /* pertahankan ukuranmu */
+        }
+
+        /* beri jarak antar tabel di dalam kartu */
+        .card .scroll-table {
+            margin-bottom: 18px;
+            /* spasi vertikal antar tabel */
+        }
+
+        /* kalau tabel itu yang terakhir di kartu, hilangkan jaraknya */
+        .card .scroll-table:last-of-type {
+            margin-bottom: 0;
+        }
+
+        /* sedikit jarak kecil antara judul h4 dan tabelnya */
+        .h4-row+.scroll-table {
+            margin-top: 6px;
+        }
+
+        /* --- collapsible (dropdown) --- */
+        details {
+            border: 1px solid rgba(0, 0, 0, .06);
+            border-radius: 10px;
+            background: #fff;
+            margin: 8px 0 14px;
+        }
+
+        summary {
+            list-style: none;
+            /* hilangkan marker bawaan */
+            cursor: pointer;
+            padding: 10px 12px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            font-size: 15px;
+            font-weight: 600;
+            background: #F7F7FB;
+            border-radius: 10px;
+        }
+
+        summary::-webkit-details-marker {
+            display: none;
+        }
+
+        .summary-left {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .chev {
+            transition: transform .2s ease;
+            font-size: 18px;
+            opacity: .7;
+        }
+
+        details[open] .chev {
+            transform: rotate(90deg);
+        }
+
+        .details-body {
+            padding: 10px 12px 14px;
+        }
+
+        /* rapikan tombol unduh kecil */
+        .btn-outline {
+            height: 28px;
+            font-size: 12px;
+            padding: 0 8px;
+        }
+
+        /* --- styling khusus tabel frekuensi yang sudah dibersihkan --- */
+        .scroll-table.freq table {
+            border-collapse: separate;
+            border-spacing: 0;
+        }
+
+        /* kolom pertama (nilai fitur: high/low/med/vhigh) */
+        .scroll-table.freq table tbody td:first-child {
+            background: #E2DEF7;
+            /* abu muda */
+            font-weight: 700;
+            /* bold */
+        }
+
+        /* baris Grand Total (baris terakhir) */
+        .scroll-table.freq table tbody tr:last-child td {
+            background: #E2DEF7;
+            /* sedikit lebih terang untuk total */
+            font-weight: 700;
+        }
+
+        /* biar header tetap menonjol */
+        .scroll-table.freq table thead th {
+            background: linear-gradient(to bottom, #E2DEF7);
+            font-weight: 700;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <header>
+            <div class="brand">Naive Bayes</div>
+        </header>
+
+        <div class="stack content">
+            <section class="card">
+                <h2>Hasil Analisis Dataset: <span class="badge">{{ filename }}</span></h2>
+
+                {% if error %}
+                <div class="card">{{ error }}</div>
+                {% else %}
+                <h3>Dataset</h3>
+                <div class="scroll-table">{{ head|safe }}</div>
+            </section>
+
+            <section class="grid">
+                <!-- Kartu: Data Training -->
+                <div class="card">
+                    <h3>Data Training (80%)</h3>
+
+                    <div class="h4-row">
+                        <h4>x_train</h4>
+                        <a class="btn btn-outline" href="{{ download_split.x_train }}">unduh CSV</a>
+                    </div>
+                    <div class="scroll-table">{{ x_train|safe }}</div>
+
+                    <div class="h4-row" style="margin-top:8px">
+                        <h4>y_train</h4>
+                        <a class="btn btn-outline" href="{{ download_split.y_train }}">unduh CSV</a>
+                    </div>
+                    <div class="scroll-table">{{ y_train|safe }}</div>
+                </div>
+
+                <!-- Kartu: Data Testing -->
+                <div class="card">
+                    <h3>Data Testing (20%)</h3>
+
+                    <div class="h4-row">
+                        <h4>x_test</h4>
+                        <a class="btn btn-outline" href="{{ download_split.x_test }}">unduh CSV</a>
+                    </div>
+                    <div class="scroll-table">{{ x_test|safe }}</div>
+
+                    <div class="h4-row" style="margin-top:8px">
+                        <h4>y_test</h4>
+                        <a class="btn btn-outline" href="{{ download_split.y_test }}">unduh CSV</a>
+                    </div>
+                    <div class="scroll-table">{{ y_test|safe }}</div>
+
+                    <div class="h4-row" style="margin-top:8px">
+                        <h4>y_pred</h4>
+                        <a class="btn btn-outline" href="{{ download_split.y_pred }}">unduh CSV</a>
+                    </div>
+                    <div class="scroll-table">{{ y_pred|safe }}</div>
+                </div>
+            </section>
+
+            <!-- ===== TRAIN (dipakai model & manual) ===== -->
+            <section class="card">
+                <h3>Probabilitas Prior — Data Training (N={{ train_size }})</h3>
+                <div class="scroll-table">{{ prior_table_train_html|safe }}</div>
+                <div class="btn-row">
+                    <a class="btn btn-outline" href="{{ download_train.prior }}">unduh CSV</a>
+                </div>
+            </section>
+
+            <section class="card">
+                <h3>Tabel Frekuensi — Data Training (feature × class)</h3>
+
+                {% for col, table_html in freq_tables_train.items() %}
+                <details>
+                    <summary>
+                        <div class="summary-left">
+                            <span class="chev">▶</span>
+                            <h4 style="margin:0">{{ col }}</h4>
+                        </div>
+                        <!-- tombol unduh per-fitur -->
+                        {% for feat, href in download_train.freq %}
+                        {% if feat == col %}
+                        <a class="btn btn-outline" href="{{ href }}">unduh CSV</a>
+                        {% endif %}
+                        {% endfor %}
+                    </summary>
+                    <div class="details-body">
+                        <div class="scroll-table freq">{{ table_html|safe }}</div>
+                    </div>
+                </details>
+                {% endfor %}
+            </section>
+
+            <section class="card">
+                <h3>Likelihood — Data Training (P(feature=value | class))</h3>
+
+                {% for col, table_html in likelihoods_train.items() %}
+                <details>
+                    <summary>
+                        <div class="summary-left">
+                            <span class="chev">▶</span>
+                            <h4 style="margin:0">{{ col }}</h4>
+                        </div>
+                        {% for feat, href in download_train.like %}
+                        {% if feat == col %}
+                        <a class="btn btn-outline" href="{{ href }}">unduh CSV</a>
+                        {% endif %}
+                        {% endfor %}
+                    </summary>
+                    <div class="details-body">
+                        <div class="scroll-table freq">{{ table_html|safe }}</div>
+                    </div>
+                </details>
+                {% endfor %}
+            </section>
+
+            <!-- ===== FULL (opsional/lampiran) ===== -->
+            <section class="card">
+                <h3>Probabilitas Prior — Dataset (N={{ full_size }})</h3>
+                <div class="scroll-table">{{ prior_table_full_html|safe }}</div>
+                <div class="btn-row">
+                    <a class="btn btn-outline" href="{{ download_full.prior }}">unduh CSV</a>
+                </div>
+            </section>
+
+            <section class="card">
+                <h3>Tabel Frekuensi — Dataset (feature × class)</h3>
+
+                {% for col, table_html in freq_tables_full.items() %}
+                <details>
+                    <summary>
+                        <div class="summary-left">
+                            <span class="chev">▶</span>
+                            <h4 style="margin:0">{{ col }}</h4>
+                        </div>
+                        {% for feat, href in download_full.freq %}
+                        {% if feat == col %}
+                        <a class="btn btn-outline" href="{{ href }}">unduh CSV</a>
+                        {% endif %}
+                        {% endfor %}
+                    </summary>
+                    <div class="details-body">
+                        <div class="scroll-table freq">{{ table_html|safe }}</div>
+                    </div>
+                </details>
+                {% endfor %}
+            </section>
+
+            <section class="card">
+                <h3>Likelihood — Dataset (P(feature=value | class))</h3>
+
+                {% for col, table_html in likelihoods_full.items() %}
+                <details>
+                    <summary>
+                        <div class="summary-left">
+                            <span class="chev">▶</span>
+                            <h4 style="margin:0">{{ col }}</h4>
+                        </div>
+                        {% for feat, href in download_full.like %}
+                        {% if feat == col %}
+                        <a class="btn btn-outline" href="{{ href }}">unduh CSV</a>
+                        {% endif %}
+                        {% endfor %}
+                    </summary>
+                    <div class="details-body">
+                        <div class="scroll-table freq">{{ table_html|safe }}</div>
+                    </div>
+                </details>
+                {% endfor %}
+            </section>
+
+            <section class="card">
+                <h3>Classification Report</h3>
+                <pre
+                    style="margin:0; background:#fff; border:1px solid rgba(0,0,0,.08); border-radius:10px; padding:12px; overflow:auto">{{ report }}</pre>
+            </section>
+
+            <section class="card">
+                <h3>Confusion Matrix (Visual)</h3>
+                <div style="text-align:center">
+                    <img src="data:image/png;base64,{{ cm_base64 }}" class="img-fluid" alt="Confusion Matrix">
+                </div>
+            </section>
+
+            <section class="card score">Akurasi Model: {{ accuracy }}%</section>
+
+            <div style="text-align:center">
+                <a href="{{ url_for('predict') }}" class="btn btn-primary">Coba Prediksi Manual</a>
+            </div>
+
+            {% endif %}
+        </div>
+
+        <div class="footer">&copy; 2025 Naive Bayes</div>
+    </div>
+</body>
+
+</html>

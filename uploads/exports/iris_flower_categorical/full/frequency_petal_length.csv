@@ -1,0 +1,5 @@
+﻿petal_length,setosa,versicolor,virginica,Grand Total
+Long,0,4,47,51
+Medium,0,46,3,49
+Short,50,0,0,50
+Grand Total,50,50,50,150

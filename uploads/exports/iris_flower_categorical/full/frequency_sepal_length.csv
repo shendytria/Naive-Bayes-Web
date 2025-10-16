@@ -1,0 +1,5 @@
+﻿sepal_length,setosa,versicolor,virginica,Grand Total
+Long,0,11,31,42
+Medium,14,35,18,67
+Short,36,4,1,41
+Grand Total,50,50,50,150
